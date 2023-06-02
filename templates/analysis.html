@@ -7,7 +7,11 @@
 
         <meta name="description" content="Find the most surprising words and most common n-grams on a web page.">
 
-        <link rel="icon" href="/favicon-16x16.png">
+        <link rel="icon" href="/static/favicon-16x16.png">
+
+        <link rel="stylesheet" href="/static/styles.css">
+
+        <link rel="manifest" href="/static/manifest.json">
     </head>
     <body>
         <nav>
@@ -28,19 +32,19 @@
             <h2>Most Common Bigrams</h2>
             <ul>
                 {% for bigram in ngrams["bigrams"] %}
-                    <li>{{ bigram[0] }}</li>
+                    <li>{{ bigram[0] }} (used {{ bigram[1] }} times)</li>
                 {% endfor %}
             </ul>
             <h2>Most Common Trigrams</h2>
             <ul>
                 {% for trigram in ngrams["trigrams"] %}
-                    <li>{{ trigram[0] }}</li>
+                    <li>{{ trigram[0] }} (used {{ trigram[1] }} times)</li>
                 {% endfor %}
             </ul>
             <h2>Most Common Quadgrams</h2>
             <ul>
                 {% for quadgram in ngrams["quadgrams"] %}
-                    <li>{{ quadgram[0] }}</li>
+                    <li>{{ quadgram[0] }} (used {{ quadgram[1] }} times)</li>
                 {% endfor %}
             </ul>
         </main>

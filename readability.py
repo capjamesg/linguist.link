@@ -12,6 +12,9 @@ def get_top_k_ngrams(ngrams):
 
     top_k = counted_ngrams.most_common(3)
 
+    # flatten all ngrams so that [x, y] becomes x y
+    top_k = [(" ".join(ngram[0]), ngram[1]) for ngram in top_k]
+
     return top_k
 
 def calculate_surprisals(text: str) -> dict:

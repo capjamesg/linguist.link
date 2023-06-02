@@ -16,6 +16,9 @@ ul {
     padding: 0;
     list-style-type: none;
 }
+nav {
+    margin-bottom: 1em;
+}
 nav ul {
     display: flex;
     justify-content: space-between;
@@ -47,22 +50,12 @@ h2 {
     font-weight: bold;
 }
 main {
-    margin: 1.5em;
+    margin: auto;
+    max-width: 35em;
     padding: 1em;
     background-color: white;
     border-radius: 0.5em;
     box-shadow: 0 0 0.5em rgba(0, 0, 0, 0.1);
-}
-dl {
-    display: flex;
-    flex-direction: row;
-    justify-content: space-between;
-}
-dt {
-    width: 20%;
-}
-dd {
-    width: 80%;
 }
 #index {
     display: flex;
@@ -70,15 +63,28 @@ dd {
     flex-wrap: wrap;
     justify-content: space-between;
 }
+input {
+    padding: 0.5em;
+    border-radius: 0.5em;
+    border: 1px solid #ccc;
+    margin-bottom: 1em;
+    width: 100%;
+    box-sizing: border-box;
+    min-height: 2em;
+}
+button {
+    padding: 0.5em;
+    border-radius: 0.5em;
+    border: none;
+    font-weight: bold;
+    margin-bottom: 1em;
+    background-color: rgb(0, 128, 64);
+    color: white;
+    width: 100%;
+    cursor: pointer;
+}
 @media (max-width: 600px) {
-    dl {
-        flex-direction: column;
-        margin-right: 10px;
-    }
-    dt {
-        width: 100%;
-    }
-    dd {
-        width: 100%;
+    nav ul {
+        padding: 0;
     }
 }
