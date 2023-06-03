@@ -1,52 +1,52 @@
-<!DOCTYPE html>
-<html lang="en">
-    <head>
-        <meta charset="UTF-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>linguist.link</title>
+{% extends "base.html" %}
+{% block content %}
+<h1>linguist.link</h1>
+<p>Analysis for <a href="{{url}}">{{url}}</a></p>
+<p>Time to read: ~{{time_to_read}} minutes</p>
+<p>Reading level: {{reading_level}}</p>
+<h2>Most Surprising Words</h2>
+<ul>
+    {% for word in prose_surprisals %}
+        <li>{{ word[0] }}</li>
+    {% endfor %}
+</ul>
+<h2>Most Common Words</h2>
+<ul>
+    {% for word in top_k_freq %}
+        <li>{{ word[0] }} (used {{ word[1] }} times)</li>
+    {% endfor %}
+</ul>
+<h2>Most Common Bigrams</h2>
+<ul>
+    {% for bigram in ngrams["bigrams"] %}
+        <li>{{ bigram[0] }} (used {{ bigram[1] }} times)</li>
+    {% endfor %}
+</ul>
+<h2>Most Common Trigrams</h2>
+<ul>
+    {% for trigram in ngrams["trigrams"] %}
+        <li>{{ trigram[0] }} (used {{ trigram[1] }} times)</li>
+    {% endfor %}
+</ul>
+<h2>Most Common Quadgrams</h2>
+<ul>
+    {% for quadgram in ngrams["quadgrams"] %}
+        <li>{{ quadgram[0] }} (used {{ quadgram[1] }} times)</li>
+    {% endfor %}
+</ul>
+<h2>Surprisal</h2>
+<p id="prose"></p>
+<script>
+    var words = "{{prose_text|safe}}".split(" ");
+    var surprisals = {{article_surprisals|safe}};
+    for (var i = 0; i < words.length; i++) {
+        var word = words[i];
+        var prob = surprisals[word.trim().toLowerCase()] || 0;
 
-        <meta name="description" content="Find the most surprising words and most common n-grams on a web page.">
-
-        <link rel="icon" href="/static/favicon-16x16.png">
-
-        <link rel="stylesheet" href="/static/styles.css">
-
-        <link rel="manifest" href="/static/manifest.json">
-    </head>
-    <body>
-        <nav>
-            <ul>
-                <li><a href="/" class="home_link">linguist.link</a></li>
-                <li><a href="https://jamesg.blog">Made by capjamesg</a></li>
-            </ul>
-        </nav>
-        <main>
-            <h1>linguist.link</h1>
-            <p>Analysis for <a href="{{url}}">{{url}}</a>
-            <h2>Most Surprising Words</h2>
-            <ul>
-                {% for word in prose_surprisals %}
-                    <li>{{ word[0] }}</li>
-                {% endfor %}
-            </ul>
-            <h2>Most Common Bigrams</h2>
-            <ul>
-                {% for bigram in ngrams["bigrams"] %}
-                    <li>{{ bigram[0] }} (used {{ bigram[1] }} times)</li>
-                {% endfor %}
-            </ul>
-            <h2>Most Common Trigrams</h2>
-            <ul>
-                {% for trigram in ngrams["trigrams"] %}
-                    <li>{{ trigram[0] }} (used {{ trigram[1] }} times)</li>
-                {% endfor %}
-            </ul>
-            <h2>Most Common Quadgrams</h2>
-            <ul>
-                {% for quadgram in ngrams["quadgrams"] %}
-                    <li>{{ quadgram[0] }} (used {{ quadgram[1] }} times)</li>
-                {% endfor %}
-            </ul>
-        </main>
-    </body>
-</html>
+        var span = document.createElement("span");
+        console.log("rgba(0, 128, 64, " + parseFloat(prob).toFixed(2) + ")", prob);
+        span.innerHTML = word + " ";
+        span.style.backgroundColor = "rgba(0, 128, 64, " + parseFloat(prob).toFixed(2) + ")";
+        document.getElementById("prose").appendChild(span);
+    }
+</script>

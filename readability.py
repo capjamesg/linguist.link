@@ -1,13 +1,51 @@
+import math
+import string
+from collections import Counter, OrderedDict
+from typing import List
+
+import bs4
+import cmudict
+import nltk
 import readabilipy
 import requests
-import nltk
-import bs4
-import math
-from collections import Counter
-import string
-from flask import Flask, render_template, request, jsonify
+from flask import Flask, jsonify, render_template, request
 
-def get_top_k_ngrams(ngrams):
+WORD_LIMIT = 3000
+
+cmudict = cmudict.dict()
+
+FLESCH_KINCAID_REFERENCE = OrderedDict(
+    {
+        lambda x: x < 10: "Professional",
+        lambda x: x < 30: "College graduate",
+        lambda x: x < 50: "College",
+        lambda x: x < 60: "10th to 12th grade",
+        lambda x: x < 70: "8th & 9th grade",
+        lambda x: x < 80: "7th grade",
+        lambda x: x < 90: "6th grade",
+        lambda x: x < 100: "5th grade and below",
+    }
+)
+
+
+def flesch_kincaid_grade_level(text: str) -> float:
+    sentences = nltk.sent_tokenize(text)
+
+    words = nltk.word_tokenize(text)
+
+    num_syllables = 0
+
+    for word in words:
+        num_syllables += len(cmudict.get(word.lower(), [0]))
+
+    return (
+        0.39 * (len(words) / len(sentences))
+        + 11.8 * (num_syllables / len(words))
+        - 15.59
+    )
+
+
+def get_top_k_ngrams(ngrams: nltk.FreqDist) -> List[tuple]:
     counted_ngrams = nltk.FreqDist(ngrams)
 
     top_k = counted_ngrams.most_common(3)
@@ -16,6 +54,7 @@ def get_top_k_ngrams(ngrams):
     top_k = [(" ".join(ngram[0]), ngram[1]) for ngram in top_k]
 
     return top_k
+
 
 def calculate_surprisals(text: str) -> dict:
     counts = Counter()
@@ -31,27 +70,25 @@ def calculate_surprisals(text: str) -> dict:
     return counts
 
 
-def analyze_url(url):
+def analyze_url(
+    url: str, surprisals_as_dict: dict, word_frequency: nltk.FreqDist
+) -> tuple:
     try:
         req = requests.get(url, timeout=5)
     except:
         return [], {}
 
-    content = readabilipy.simple_json_from_html_string(req.text, use_readability=True)["content"]
+    content = readabilipy.simple_json_from_html_string(req.text, use_readability=True)[
+        "content"
+    ]
 
     soup = bs4.BeautifulSoup(content, "html.parser")
 
     query_text = soup.get_text()
 
-    surprisals = []
-    surprisals_as_dict = {}
-    probabilities = {}
+    query_text = " ".join(query_text.split(" ")[:WORD_LIMIT])
 
-    for word in counts:
-        probabilities[word] = counts[word] / len(text)
-
-        surprisals.append(-math.log(probabilities[word]))
-        surprisals_as_dict[word] = -math.log(probabilities[word])
+    original_query_text = query_text
 
     prose_surprisals = []
 
@@ -67,8 +104,8 @@ def analyze_url(url):
         if word.isnumeric():
             continue
 
-        word = word.translate(str.maketrans('', '', string.punctuation))
-        prose_surprisals.append((word, surprisals_as_dict.get(word, 10)))
+        word = word.translate(str.maketrans("", "", string.punctuation))
+        prose_surprisals.append((word, surprisals_as_dict.get(word, 8)))
 
     prose_surprisals = list(set(prose_surprisals))
 
@@ -76,20 +113,42 @@ def analyze_url(url):
 
     for selector in selectors:
         if selector == "quadgrams":
-            top_k = get_top_k_ngrams(selectors[selector]([w for w in query_text.split(" ") if w.strip() != ""], 4))
+            top_k = get_top_k_ngrams(
+                selectors[selector](
+                    [w for w in query_text.split(" ") if w.strip() != ""], 4
+                )
+            )
         else:
-            top_k = get_top_k_ngrams(selectors[selector]([w for w in query_text.split(" ") if w.strip() != ""]))
+            top_k = get_top_k_ngrams(
+                selectors[selector](
+                    [w for w in query_text.split(" ") if w.strip() != ""]
+                )
+            )
 
         ngrams[selector] = top_k
 
-    prose_surprisals = sorted(prose_surprisals, key=lambda x: x[1], reverse=True)[:10]
+    prose_surprisals = sorted(prose_surprisals, key=lambda x: x[1], reverse=True)
 
-    return prose_surprisals, ngrams
+    word_count = len(query_text.split(" "))
+
+    time_to_read = word_count / 200
+
+    reading_level = flesch_kincaid_grade_level(query_text)
+
+    return (
+        prose_surprisals,
+        ngrams,
+        time_to_read,
+        reading_level,
+        word_frequency,
+        original_query_text,
+    )
+
 
 selectors = {
     "bigrams": nltk.bigrams,
     "trigrams": nltk.trigrams,
-    "quadgrams": nltk.ngrams
+    "quadgrams": nltk.ngrams,
 }
 
 with open("/Users/james/Downloads/nytimes_news_articles.txt") as f:
@@ -107,6 +166,19 @@ app = Flask(__name__)
 
 counts = calculate_surprisals(text)
 
+surprisals = []
+surprisals_as_dict = {}
+probabilities = {}
+
+for word in counts:
+    probabilities[word] = counts[word] / len(text)
+
+    surprisals.append(-math.log(probabilities[word]))
+    surprisals_as_dict[word] = -math.log(probabilities[word])
+
+word_frequency = nltk.FreqDist(text.split(" "))
+
+
 @app.route("/")
 def index():
     url = request.args.get("url")
@@ -114,18 +186,61 @@ def index():
 
     if not url:
         return render_template("index.html", prose_surprisals=[], ngrams=[], url="")
-    
-    prose_surprisals, ngrams = analyze_url(url)
+
+    (
+        prose_surprisals,
+        ngrams,
+        time_to_read,
+        reading_level,
+        word_freq,
+        prose_text,
+    ) = analyze_url(url, surprisals_as_dict, word_frequency)
 
     if user_specified_format == "json":
-        return jsonify({
-            "prose_surprisals": prose_surprisals,
-            "ngrams": ngrams
-        })
-    
-    print(ngrams)
+        return jsonify({"prose_surprisals": prose_surprisals, "ngrams": ngrams})
 
-    return render_template("analysis.html", prose_surprisals=prose_surprisals, ngrams=ngrams, url=url)
+    top_k_freq = word_freq.most_common(10)
+
+    for func in FLESCH_KINCAID_REFERENCE:
+        if func(reading_level):
+            reading_level = FLESCH_KINCAID_REFERENCE[func]
+            break
+
+    # get surprisals as dict
+    article_surprisals = {}
+
+    for word in prose_surprisals:
+        article_surprisals[word[0]] = word[1]
+
+    # normalize surprisals
+    max_surprisal = max([word[1] for word in prose_surprisals])
+
+    for word in article_surprisals:
+        article_surprisals[word] /= max_surprisal
+
+    return render_template(
+        "analysis.html",
+        prose_surprisals=prose_surprisals[:10],
+        ngrams=ngrams,
+        url=url,
+        time_to_read=time_to_read,
+        reading_level=reading_level,
+        top_k_freq=top_k_freq,
+        prose_text=prose_text,
+        article_surprisals=article_surprisals,
+    )
+
+@app.route("/surprisals")
+def surprisals():
+    return jsonify(surprisals_as_dict)
+
+@app.route("/about")
+def about():
+    return render_template("about.html")
+
+@app.errorhandler(404)
+def page_not_found(e):
+    return render_template("404.html"), 404
 
 if __name__ == "__main__":
     app.run()

@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>linguist.link</h1>
+<h2>About linguist.link</h2>
+<p>linguist.link calculates insights about the content of a web page using various natural language processing techniques.</p>
+<p>Using linguist.link, you can find the following insights about a web page:</p>
+<ul>
+    <li>"Surprising" words</li>
+    <li>The most common words</li>
+    <li>Common bigrams, trigrams, and quadgrams</li>
+    <li>Named entities (i.e. people, organizations)</li>
+</ul>
+<p>linguist.link only supports English articles at this time.</p>
+<h2>About "Surprisal"</h2>
+<p>Surprisal is a metric that encompasses how unique a word is in a corpus of text relative to a baseline corpus of text.</p>
+<p>linguist.link calculates surprisal using a corpus of <a href="https://www.kaggle.com/datasets/nzalake52/new-york-times-articles">New York Times articles</a>. This corpus was chosen since the text in news articles is grammatically varied. The less common a word is in that corpus, the higher the surprisal.</p>
+<p>The full <a href="/surprisals">corpus of word surprisals</a> is available as JSON data.</p>
+<h2>Add a Language</h2>
+<p>linguist.link references an English language corpus of New York Times articles to calculate surprisal. Furthermore, the Flesch-Kincaid metric for evaluating reading time and reading level is only applicable to English.</p>
+<p>We would love to have support for more languages on linguist.link!</p>
+<p>To add a language, you can submit a PR to the <a href="https://github.com/capjamesg/linguist.link">linguist.link repository</a>. You will need to:</p>
+<ul>
+    <li>Add a corpus of text in the language you want to add to the repository. Then, add logic to the <code>readability.py</code> file to load the corpus.</li>
+    <li>Add logic to the <code>readability.py</code> file to calculate surprisal for the language you want to add using the corpus.</li>
+    <li>Add a subpath (i.e. /uk/, /fr/) that will serve the language you want to add. You can copy the <code>index</code> subpath as a template.</li>
+    <li>Add any readability metrics that apply to the language you want to add (optional).</li>
+</ul>
+
+{% endblock %}

@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>linguist.link</title>
+
+        <meta name="description" content="Find the most surprising words and most common n-grams on a web page.">
+        <meta property="og:image" content="https://screenshots.jamesg.blog/?url=https://linguist.link" />
+
+        <link rel="icon" href="/static/favicon-16x16.png">
+
+        <link rel="stylesheet" href="/static/styles.css">
+
+        <link rel="manifest" href="/static/manifest.json">
+    </head>
+    <body>
+        <nav>
+            <ul>
+                <li><a href="/" class="home_link">linguist.link</a></li>
+                <li><a href="https://jamesg.blog">Made by capjamesg</a></li>
+            </ul>
+        </nav>
+        <main>
+            {{content}}
+        </main>
+        <script>
+            /* add http:// to URL fields on blur or when enter is pressed */
+            document.addEventListener('DOMContentLoaded', function() {
+              function addDefaultScheme(target) {
+                if(target.value.match(/^(?!https?:).+\..+/)) {
+                  target.value = "http://"+target.value;
+                }
+              }
+              var elements = document.querySelectorAll("input[type=url]");
+              Array.prototype.forEach.call(elements, function(el, i){
+                el.addEventListener("blur", function(e){
+                  addDefaultScheme(e.target);
+                });
+                el.addEventListener("keydown", function(e){
+                  if(e.keyCode == 13) {
+                    addDefaultScheme(e.target);
+                  }
+                });
+              });
+            });
+        </script>
+    </body>
+</html>
