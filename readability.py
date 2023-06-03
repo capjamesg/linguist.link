@@ -9,6 +9,7 @@ import nltk
 import readabilipy
 import requests
 from flask import Flask, jsonify, render_template, request
+import datetime
 
 WORD_LIMIT = 3000
 
@@ -218,6 +219,8 @@ def index():
     for word in article_surprisals:
         article_surprisals[word] /= max_surprisal
 
+    accessed_date = datetime.datetime.now().strftime("%B %d, %Y")
+
     return render_template(
         "analysis.html",
         prose_surprisals=prose_surprisals[:10],
@@ -228,6 +231,7 @@ def index():
         top_k_freq=top_k_freq,
         prose_text=prose_text,
         article_surprisals=article_surprisals,
+        accessed_date=accessed_date,
     )
 
 @app.route("/surprisals")
