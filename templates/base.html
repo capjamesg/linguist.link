@@ -23,7 +23,8 @@
             </ul>
         </nav>
         <main>
-            {{content}}
+            {% block content %}
+            {% endblock %}
         </main>
         <script>
             /* add http:// to URL fields on blur or when enter is pressed */
