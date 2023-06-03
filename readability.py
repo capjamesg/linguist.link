@@ -153,7 +153,7 @@ def analyze_url(
 
     sentence_surprisals = []
 
-    for sentence in nltk.sent_tokenize(query_text):
+    for sentence in nltk.sent_tokenize(original_query_text):
         sentence_surprisals.append(
             (sentence, sum([surprisals_as_dict.get(word, 8) for word in sentence.split(" ")]))
         )
