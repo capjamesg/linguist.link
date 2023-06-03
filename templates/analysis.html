@@ -34,15 +34,21 @@
         <li>{{ quadgram[0] }} (used {{ quadgram[1] }} times)</li>
     {% endfor %}
 </ul>
+<h2>Named Entities</h2>
+<ul>
+    {% for ne in named_entities %}
+        <li>{{ ne["word"] }} ({{ ne["entity"] }})</li>
+    {% endfor %}
+</ul>
 <h2>Surprisal</h2>
 <p id="prose"></p>
 <h2>Citation</h2>
 <p>Use the following citation to reference this page in academic works.</p>
 <pre>
-    linguist.link. “Analysis for {{url}}” {{ accessed_date }}. https://linguist.link/?url={{url}}.
+linguist.link. “Analysis for {{url}}” {{ accessed_date }}. https://linguist.link/?url={{url}}.
 </pre>
 <script>
-    var words = "{{prose_text|safe}}".split(" ");
+    var words = `{{prose_text}}`.split(" ");
     var surprisals = {{article_surprisals|safe}};
     for (var i = 0; i < words.length; i++) {
         var word = words[i];

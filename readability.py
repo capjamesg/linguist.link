@@ -11,6 +11,14 @@ import requests
 from flask import Flask, jsonify, render_template, request
 import datetime
 
+from transformers import AutoTokenizer, AutoModelForTokenClassification
+from transformers import pipeline
+
+tokenizer = AutoTokenizer.from_pretrained("dslim/bert-base-NER")
+model = AutoModelForTokenClassification.from_pretrained("dslim/bert-base-NER")
+
+nlp = pipeline("ner", model=model, tokenizer=tokenizer)
+
 WORD_LIMIT = 3000
 
 cmudict = cmudict.dict()
@@ -27,6 +35,18 @@ FLESCH_KINCAID_REFERENCE = OrderedDict(
         lambda x: x < 100: "5th grade and below",
     }
 )
+
+NER_REFERENCE = {
+    "O": None,
+    "B-MISC": "Misc.",
+    "I-MISC": "Misc.",
+    "B-PER": "Person",
+    "I-PER": "Person",
+    "B-ORG": "Organization",
+    "I-ORG": "Organization",
+    "B-LOC": "Location",
+    "I-LOC": "Location",
+}
 
 
 def flesch_kincaid_grade_level(text: str) -> float:
@@ -136,6 +156,43 @@ def analyze_url(
 
     reading_level = flesch_kincaid_grade_level(query_text)
 
+    named_entities = nlp(original_query_text)
+
+    print(named_entities)
+
+    for entity in named_entities:
+        entity["entity"] = NER_REFERENCE[entity["entity"]]
+
+    # MERGE NAMED ENTITIES
+    final_named_entities = []
+
+    for entity in named_entities:
+        if len(final_named_entities) == 0:
+            final_named_entities.append(entity)
+            continue
+
+        if entity["entity"] == final_named_entities[-1]["entity"]:
+            # if word stats with ##, offset by -1
+            if entity["word"].startswith("##"):
+                final_named_entities[-1]["word"] += entity["word"].replace("##", "").strip()
+            else:
+                final_named_entities[-1]["word"] += " " + entity["word"].replace("##", "").strip()
+        else:
+            final_named_entities.append(entity)
+
+    named_entities = final_named_entities
+
+    # dedupe named entities
+    words = set()
+    deduped_named_entities = []
+
+    for entity in named_entities:
+        if entity["word"] not in words:
+            deduped_named_entities.append(entity)
+            words.add(entity["word"])
+
+    named_entities = deduped_named_entities
+
     return (
         prose_surprisals,
         ngrams,
@@ -143,6 +200,7 @@ def analyze_url(
         reading_level,
         word_frequency,
         original_query_text,
+        named_entities
     )
 
 
@@ -195,6 +253,7 @@ def index():
         reading_level,
         word_freq,
         prose_text,
+        named_entities
     ) = analyze_url(url, surprisals_as_dict, word_frequency)
 
     if user_specified_format == "json":
@@ -232,6 +291,7 @@ def index():
         prose_text=prose_text,
         article_surprisals=article_surprisals,
         accessed_date=accessed_date,
+        named_entities=named_entities
     )
 
 @app.route("/surprisals")
