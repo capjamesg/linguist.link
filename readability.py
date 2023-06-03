@@ -99,9 +99,10 @@ def analyze_url(
     except:
         return [], {}
 
-    content = readabilipy.simple_json_from_html_string(req.text, use_readability=True)[
-        "content"
-    ]
+    article = readabilipy.simple_json_from_html_string(req.text, use_readability=True)
+
+    content = article["content"]
+    title = article["title"]
 
     soup = bs4.BeautifulSoup(content, "html.parser")
 
@@ -150,6 +151,15 @@ def analyze_url(
 
     prose_surprisals = sorted(prose_surprisals, key=lambda x: x[1], reverse=True)
 
+    sentence_surprisals = []
+
+    for sentence in nltk.sent_tokenize(query_text):
+        sentence_surprisals.append(
+            (sentence, sum([surprisals_as_dict.get(word, 8) for word in sentence.split(" ")]))
+        )
+
+    sentence_surprisals = sorted(sentence_surprisals, key=lambda x: x[1], reverse=True)
+
     word_count = len(query_text.split(" "))
 
     time_to_read = word_count / 200
@@ -157,8 +167,6 @@ def analyze_url(
     reading_level = flesch_kincaid_grade_level(query_text)
 
     named_entities = nlp(original_query_text)
-
-    print(named_entities)
 
     for entity in named_entities:
         entity["entity"] = NER_REFERENCE[entity["entity"]]
@@ -200,7 +208,9 @@ def analyze_url(
         reading_level,
         word_frequency,
         original_query_text,
-        named_entities
+        named_entities,
+        sentence_surprisals,
+        title
     )
 
 
@@ -253,7 +263,9 @@ def index():
         reading_level,
         word_freq,
         prose_text,
-        named_entities
+        named_entities,
+        sentence_surprisals,
+        title
     ) = analyze_url(url, surprisals_as_dict, word_frequency)
 
     if user_specified_format == "json":
@@ -291,7 +303,9 @@ def index():
         prose_text=prose_text,
         article_surprisals=article_surprisals,
         accessed_date=accessed_date,
-        named_entities=named_entities
+        named_entities=named_entities,
+        surprising_sentences=sentence_surprisals[:3],
+        article_title=title
     )
 
 @app.route("/surprisals")

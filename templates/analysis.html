@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 {% block content %}
 <h1>linguist.link</h1>
-<p>Analysis for <a href="{{url}}">{{url}}</a></p>
+<p>Analysis for <a href="{{url}}">{{article_title}}</a></p>
 <p>Time to read: ~{{time_to_read}} minutes</p>
 <p>Reading level: {{reading_level}}</p>
 <h2>Most Surprising Words</h2>
@@ -32,6 +32,12 @@
 <ul>
     {% for quadgram in ngrams["quadgrams"] %}
         <li>{{ quadgram[0] }} (used {{ quadgram[1] }} times)</li>
+    {% endfor %}
+</ul>
+<h2>Most Surprising Sentences</h2>
+<ul>
+    {% for sentence in surprising_sentences %}
+        <li class="box" style="margin-bottom: 10px;">{{ sentence[0] }}</li>
     {% endfor %}
 </ul>
 <h2>Named Entities</h2>
