@@ -201,6 +201,8 @@ def analyze_url(
 
     named_entities = deduped_named_entities
 
+    word_frequency = nltk.FreqDist(query_text.split(" "))
+
     return (
         prose_surprisals,
         ngrams,

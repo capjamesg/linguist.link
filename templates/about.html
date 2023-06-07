@@ -19,7 +19,7 @@
 <p>linguist.link references an English language corpus of New York Times articles to calculate surprisal. Furthermore, the Flesch-Kincaid metric for evaluating reading time and reading level is only applicable to English.</p>
 <p>We would love to have support for more languages on linguist.link!</p>
 <p>To add a language, you can submit a PR to the <a href="https://github.com/capjamesg/linguist.link">linguist.link repository</a>. You will need to:</p>
-<ul>
+<ul class="full-list">
     <li>Add a corpus of text in the language you want to add to the repository. Then, add logic to the <code>readability.py</code> file to load the corpus.</li>
     <li>Add logic to the <code>readability.py</code> file to calculate surprisal for the language you want to add using the corpus.</li>
     <li>Add a subpath (i.e. /uk/, /fr/) that will serve the language you want to add. You can copy the <code>index</code> subpath as a template.</li>
